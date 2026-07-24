@@ -1,6 +1,7 @@
 package net.shortninja.staffplus.core.domain.staff.vanish;
 
 import be.garagepoort.mcioc.IocBean;
+import de.myzelyam.api.vanish.VanishAPI;
 import net.shortninja.staffplus.core.domain.player.settings.PlayerSettings;
 import net.shortninja.staffplus.core.domain.player.settings.PlayerSettingsRepository;
 import net.shortninja.staffplusplus.vanish.VanishOffEvent;
@@ -44,6 +45,12 @@ public class VanishService {
         settings.setVanishType(vanishType);
         playerSettingsRepository.save(settings);
         vanishCache.put(player.getUniqueId(), vanishType);
+
+        // Sync with SuperVanish for TOTAL and PLAYER vanish types
+        if (vanishType == VanishType.TOTAL || vanishType == VanishType.PLAYER) {
+            VanishAPI.hidePlayer(player);
+        }
+
         sendEvent(new VanishOnEvent(vanishType, player, onJoin));
     }
 
@@ -56,6 +63,9 @@ public class VanishService {
         session.setVanishType(VanishType.NONE);
         vanishCache.put(player.getUniqueId(), VanishType.NONE);
         playerSettingsRepository.save(session);
+
+        // Sync with SuperVanish
+        VanishAPI.showPlayer(player);
 
         sendEvent(new VanishOffEvent(vanishType, player));
     }
